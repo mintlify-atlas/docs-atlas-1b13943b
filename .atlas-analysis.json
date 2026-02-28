@@ -1,0 +1,72 @@
+{
+  "projectType": "cli-tool",
+  "projectName": "Redirect Trace",
+  "projectDescription": "Professional URL redirect tracer for Raycast that analyzes redirect chains, removes tracking params, and debugs links.",
+  "theme": "palm",
+  "primaryColor": "#FF6363",
+  "lightColor": "#FF9B9B",
+  "darkColor": "#CC4F4F",
+  "navigation": {
+    "groups": [
+      {
+        "group": "Get Started",
+        "pages": [
+          "introduction",
+          "installation",
+          "quickstart"
+        ]
+      },
+      {
+        "group": "Features",
+        "pages": [
+          "features/redirect-tracing",
+          "features/tracking-removal",
+          "features/clipboard-integration"
+        ]
+      },
+      {
+        "group": "Usage",
+        "pages": [
+          "usage/basic-usage",
+          "usage/keyboard-shortcuts",
+          "usage/long-urls"
+        ]
+      },
+      {
+        "group": "Use Cases",
+        "pages": [
+          "use-cases/security",
+          "use-cases/marketing",
+          "use-cases/development"
+        ]
+      },
+      {
+        "group": "Reference",
+        "pages": [
+          "reference/configuration",
+          "reference/api",
+          "reference/troubleshooting"
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Smart URL detection with automatic clipboard integration",
+    "Complete redirect chain analysis with HTTP status codes",
+    "Intelligent tracking parameter removal (50+ types)",
+    "Visual status indicators with color-coded responses",
+    "Comprehensive keyboard shortcuts for efficient workflow",
+    "Support for long URLs (500+ characters) via clipboard",
+    "Real-time processing with minimal latency",
+    "Privacy-focused with no data storage or tracking"
+  ],
+  "publicApiSurface": [
+    "followRedirects(url: string): Promise<RedirectChain>",
+    "cleanTrackingParams(url: string): string",
+    "validateUrl(url: string): string",
+    "RedirectChain interface",
+    "RedirectStep interface",
+    "Preferences.maxRedirects",
+    "Preferences.timeout"
+  ]
+}
