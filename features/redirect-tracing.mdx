@@ -1,0 +1,177 @@
+---
+title: Redirect tracing
+description: Understand how Redirect Trace analyzes redirect chains, interprets HTTP status codes, and visualizes the complete path from original URL to final destination.
+---
+
+Redirect Trace follows the complete chain of HTTP redirects to reveal where URLs actually lead. You can trace any URL to see every intermediate step, status code, and final destination.
+
+## How redirect tracing works
+
+The extension sends HTTP requests with `redirect: "manual"` mode to capture each redirect step instead of following them automatically. This allows you to see the complete chain.
+
+```typescript trace-redirects.tsx
+const response = await fetch(currentUrl, {
+  method: "GET",
+  redirect: "manual",
+  signal: controller.signal,
+  headers: {
+    "User-Agent": "RedirectTrace-Raycast-Extension/1.0",
+    Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*",
+    "Accept-Language": "en-US,en;q=0.9",
+    DNT: "1",
+    Connection: "keep-alive",
+  },
+});
+```
+
+Each response includes the status code, status text, headers, and the URL at that step. The extension continues following redirects until it reaches a final destination or hits the maximum redirect limit.
+
+## HTTP status code handling
+
+Redirect Trace interprets different HTTP status codes to understand the redirect chain:
+
+<Accordion title="2xx - Success status codes">
+  Status codes from 200-299 indicate successful responses. When the extension encounters these codes, it stops following redirects because the final destination has been reached.
+
+  ```typescript trace-redirects.tsx
+  if (response.status >= 200 && response.status < 300) return Icon.CheckCircle;
+  ```
+
+  Common success codes:
+  - **200 OK** - Standard successful response
+  - **201 Created** - Resource successfully created
+  - **204 No Content** - Successful request with no response body
+</Accordion>
+
+<Accordion title="3xx - Redirect status codes">
+  Status codes from 300-399 indicate redirects. The extension extracts the `Location` header to find the next URL in the chain.
+
+  ```typescript trace-redirects.tsx
+  if (response.status >= 300 && response.status < 400) {
+    const location = response.headers.get("location");
+    if (!location) {
+      break;
+    }
+    // Continue to next URL in chain
+  }
+  ```
+
+  Common redirect codes:
+  - **301 Moved Permanently** - URL has permanently moved to a new location
+  - **302 Found** - Temporary redirect to another URL
+  - **303 See Other** - Response can be found at another URL
+  - **307 Temporary Redirect** - Temporary redirect while preserving request method
+  - **308 Permanent Redirect** - Permanent redirect while preserving request method
+</Accordion>
+
+<Accordion title="4xx - Client error codes">
+  Status codes from 400-499 indicate client errors. The extension stops tracing and reports the error.
+
+  ```typescript trace-redirects.tsx
+  if (response.status >= 400 && response.status < 500) return Icon.ExclamationMark;
+  ```
+
+  Common client errors:
+  - **400 Bad Request** - Invalid request syntax
+  - **401 Unauthorized** - Authentication required
+  - **403 Forbidden** - Server refuses to fulfill request
+  - **404 Not Found** - Requested resource doesn't exist
+  - **429 Too Many Requests** - Rate limit exceeded
+</Accordion>
+
+<Accordion title="5xx - Server error codes">
+  Status codes from 500-599 indicate server errors. The extension stops tracing and marks the chain as incomplete.
+
+  ```typescript trace-redirects.tsx
+  if (response.status >= 500) return Icon.XMarkCircle;
+  ```
+
+  Common server errors:
+  - **500 Internal Server Error** - Generic server failure
+  - **502 Bad Gateway** - Invalid response from upstream server
+  - **503 Service Unavailable** - Server temporarily unable to handle request
+  - **504 Gateway Timeout** - Upstream server failed to respond in time
+</Accordion>
+
+## Step-by-step visualization
+
+Each step in the redirect chain shows:
+
+- **Status code and text** - The HTTP response status (e.g., "301 Moved Permanently")
+- **URL** - The complete URL at this step in the chain
+- **Step number** - The position in the redirect sequence
+- **URL length** - Character count to identify long tracking URLs
+- **Color-coded icons** - Visual indicators based on status code type
+
+<Info>
+  The extension preserves the complete chain even if it encounters an error. You can see all successful steps before the failure occurred.
+</Info>
+
+## URL resolution logic
+
+The extension handles different types of Location header values:
+
+```typescript trace-redirects.tsx
+if (location.startsWith("http")) {
+  nextUrl = location;
+} else if (location.startsWith("/")) {
+  const baseUrl = new URL(currentUrl);
+  nextUrl = `${baseUrl.protocol}//${baseUrl.host}${location}`;
+} else {
+  nextUrl = new URL(location, currentUrl).href;
+}
+```
+
+**Absolute URLs** - Full URLs with protocol (http:// or https://) are used directly.
+
+**Root-relative URLs** - URLs starting with `/` are resolved against the current domain.
+
+**Relative URLs** - Other URLs are resolved relative to the current URL.
+
+## Error handling
+
+Redirect Trace provides specific error messages for common failure scenarios:
+
+<CodeGroup>
+
+```typescript DNS resolution failed
+if (fetchError.message.includes("ENOTFOUND")) {
+  errorMessage = "DNS resolution failed - domain not found";
+}
+```
+
+```typescript Connection refused
+if (fetchError.message.includes("ECONNREFUSED")) {
+  errorMessage = "Connection refused by server";
+}
+```
+
+```typescript SSL certificate error
+if (fetchError.message.includes("certificate")) {
+  errorMessage = "SSL certificate error";
+}
+```
+
+```typescript Request timeout
+if (fetchError.name === "AbortError") {
+  errorMessage = `Request timeout after ${timeout}ms`;
+}
+```
+
+</CodeGroup>
+
+<Note>
+  You can configure the maximum number of redirects and timeout duration in the extension preferences.
+</Note>
+
+## Redirect chain summary
+
+After tracing completes, you see a summary with:
+
+- **Total redirect count** - Number of redirect steps followed
+- **Original URL** - The starting URL you entered
+- **Final destination** - Where the URL ultimately leads
+- **Completion status** - Whether the chain completed successfully or hit the maximum redirect limit
+- **Clean URL option** - Final URL with tracking parameters removed
+
+You can copy the full chain report, individual URLs, or just the final destination depending on your needs.

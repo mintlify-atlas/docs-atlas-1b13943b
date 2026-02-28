@@ -1,0 +1,223 @@
+---
+title: Marketing use cases
+description: Analyze campaign performance, optimize link architecture, and inspect tracking parameters with redirect tracing
+---
+
+Redirect Trace helps marketers understand how their links work, identify performance bottlenecks, and verify tracking implementation. Use it to optimize campaigns and improve click-through rates.
+
+## Campaign analysis
+
+Analyze your marketing campaigns by tracing the redirect chains from email, social media, and paid ads to landing pages.
+
+<CardGroup cols={2}>
+  <Card title="Email campaigns" icon="envelope">
+    Trace links from email marketing platforms to see how many redirects subscribers experience before reaching your landing page
+  </Card>
+  <Card title="Social media" icon="share-nodes">
+    Check how platform-specific tracking (Facebook, LinkedIn, Twitter) adds redirects to your shared links
+  </Card>
+  <Card title="Paid advertising" icon="bullseye">
+    Verify redirect chains in Google Ads, Facebook Ads, and other paid campaigns to ensure tracking fires correctly
+  </Card>
+  <Card title="Influencer content" icon="users">
+    Track how affiliate links and influencer tracking codes redirect before reaching your site
+  </Card>
+</CardGroup>
+
+### Understanding your redirect chain
+
+A typical marketing link redirect chain looks like this:
+
+```
+bit.ly/campaign
+  ↓
+email-platform.com/click?tracking=abc123
+  ↓
+yoursite.com/promo?utm_source=email&utm_campaign=spring2024
+  ↓
+yoursite.com/promo (after tracking parameters are processed)
+```
+
+Each redirect adds latency and potential drop-off points. Use Redirect Trace to identify unnecessary steps.
+
+<Info>
+Research shows that each additional redirect in a marketing link increases load time by 200-400ms and can reduce conversion rates by 2-3%. Keep your redirect chains short.
+</Info>
+
+## Link optimization
+
+Identify and eliminate unnecessary redirects that slow down your marketing links and hurt conversion rates.
+
+### Common redirect bottlenecks
+
+<Accordion title="Multiple URL shorteners">
+**Problem:** Using multiple URL shorteners in sequence creates unnecessary redirects.
+
+**Example:**
+```
+bit.ly/abc → tinyurl.com/xyz → yoursite.com
+```
+
+**Solution:** Use only one URL shortener, or better yet, use your own domain for branded short links.
+
+**Impact:** Removing one redirect can improve load time by 300ms and reduce drop-off by 2-5%.
+</Accordion>
+
+<Accordion title="Marketing platform redirects">
+**Problem:** Email platforms (Mailchimp, SendGrid) and social schedulers add tracking redirects.
+
+**Example:**
+```
+email-platform.com/click?id=123
+  → analytics-platform.com/track?campaign=abc
+  → yoursite.com
+```
+
+**Solution:** Minimize tracking layers by consolidating analytics platforms, or use UTM parameters instead of redirect-based tracking.
+
+**Impact:** Can reduce total redirects from 5+ to 2-3, significantly improving click-through experience.
+</Accordion>
+
+<Accordion title="HTTP to HTTPS redirects">
+**Problem:** Links that start with HTTP redirect to HTTPS, adding an extra step.
+
+**Example:**
+```
+http://yoursite.com/promo → https://yoursite.com/promo
+```
+
+**Solution:** Always use HTTPS in your marketing links from the start.
+
+**Impact:** Eliminates one redirect and improves perceived page load speed.
+</Accordion>
+
+### Optimization workflow
+
+1. **Trace your campaign links** - Copy your marketing URLs and trace them in Redirect Trace
+2. **Count the redirects** - Check the "Redirect Count" in the summary
+3. **Identify unnecessary steps** - Look for duplicate tracking, multiple shorteners, or HTTP redirects
+4. **Test alternatives** - Create optimized versions and trace them to verify fewer redirects
+5. **Measure impact** - Compare click-through rates and conversion rates before and after optimization
+
+<Info>
+Aim for 0-2 redirects in your marketing links. More than 3 redirects indicates optimization opportunities.
+</Info>
+
+## UTM parameter inspection
+
+Inspect and verify UTM parameters and other tracking codes in your marketing links to ensure proper attribution.
+
+<CardGroup cols={2}>
+  <Card title="Parameter verification" icon="check">
+    Confirm UTM parameters (source, medium, campaign) are present and correctly formatted at each redirect step
+  </Card>
+  <Card title="Parameter preservation" icon="link">
+    Verify that UTM parameters survive through redirect chains and reach your analytics platform
+  </Card>
+</CardGroup>
+
+### Common UTM parameters
+
+Redirect Trace automatically detects and can clean these tracking parameters:
+
+- **utm_source** - Identifies the traffic source (google, newsletter, facebook)
+- **utm_medium** - Identifies the marketing medium (email, cpc, social)
+- **utm_campaign** - Identifies the specific campaign (spring_sale, product_launch)
+- **utm_term** - Identifies paid search keywords
+- **utm_content** - Differentiates similar content or links in the same ad
+
+### Parameter inspection workflow
+
+When tracing marketing links, check for:
+
+1. **Parameter presence** - Are UTM parameters added at the expected step?
+2. **Parameter persistence** - Do parameters survive through all redirects?
+3. **Parameter conflicts** - Are different tracking systems adding conflicting parameters?
+4. **Parameter bloat** - Are unnecessary tracking codes making URLs too long?
+
+<Accordion title="Example: Debugging missing UTM parameters">
+**Scenario:** Your Google Analytics shows "(direct)" traffic instead of "email campaign" for your newsletter links.
+
+**Investigation with Redirect Trace:**
+
+1. Trace your email newsletter link
+2. Check each redirect step
+3. Identify where UTM parameters are lost
+
+**Common causes:**
+- URL shortener strips parameters (solution: use a different shortener)
+- Landing page redirects to another page without preserving parameters
+- JavaScript redirect that doesn't carry query parameters forward
+
+**Fix:** Modify your link structure to preserve parameters through all redirects.
+</Accordion>
+
+## Clean URL extraction
+
+Extract clean versions of your landing pages without tracking parameters for sharing or testing.
+
+### When to use clean URLs
+
+- **Internal sharing** - Share clean versions with your team without tracking noise
+- **A/B testing** - Create control URLs without tracking to test against tracked versions
+- **Social proof** - Share cleaner-looking URLs in social media when tracking isn't needed
+- **Documentation** - Use clean URLs in product documentation and help articles
+
+### Extracting clean URLs
+
+Use the "Copy Clean URL" action (⌘⇧L) to get a version with all tracking parameters removed:
+
+**Original tracked URL:**
+```
+https://yoursite.com/product?utm_source=newsletter&utm_medium=email&utm_campaign=launch&fbclid=abc123&gclid=xyz789&mc_cid=abc&_ga=def456
+```
+
+**Clean URL:**
+```
+https://yoursite.com/product
+```
+
+<Info>
+Redirect Trace removes 40+ common tracking parameters including Google Analytics, Facebook, UTM codes, email marketing platforms, and more.
+</Info>
+
+## Campaign performance insights
+
+Use redirect chain analysis to understand and improve campaign performance:
+
+<CardGroup cols={1}>
+  <Card title="Redirect latency" icon="clock">
+    Measure how long each redirect takes by comparing timestamps - slower redirects hurt conversion rates
+  </Card>
+  <Card title="Drop-off analysis" icon="chart-line-down">
+    More redirects = more opportunities for users to abandon - minimize redirect count for critical campaigns
+  </Card>
+  <Card title="Mobile vs desktop" icon="mobile">
+    Mobile users are more sensitive to redirect latency - test your links on mobile devices specifically
+  </Card>
+  <Card title="Geographic routing" icon="globe">
+    Identify if your links redirect differently based on location - important for international campaigns
+  </Card>
+</CardGroup>
+
+## Integration with marketing tools
+
+Use Redirect Trace alongside your existing marketing stack:
+
+- **Before launching campaigns** - Trace all links in your email templates, landing pages, and ads
+- **During campaign optimization** - Compare redirect chains between high and low-performing variants
+- **Post-campaign analysis** - Review redirect patterns in your most successful campaigns
+- **Link audits** - Regularly audit your marketing links to catch broken redirects or added latency
+
+### Workflow example
+
+1. **Export links from your email platform** (Mailchimp, HubSpot, etc.)
+2. **Trace each link** in Redirect Trace
+3. **Copy full chain reports** (⌘⌥C) for documentation
+4. **Identify optimization opportunities** based on redirect count
+5. **Implement changes** and verify with another trace
+6. **Monitor performance** with your analytics platform
+
+<Info>
+Create a spreadsheet to track redirect counts for all your marketing links over time. This helps you catch when platforms add new tracking redirects that hurt performance.
+</Info>

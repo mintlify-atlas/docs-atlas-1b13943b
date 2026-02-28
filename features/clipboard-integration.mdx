@@ -1,0 +1,217 @@
+---
+title: Clipboard integration
+description: Smart clipboard detection automatically identifies long URLs (500+ characters) and provides a streamlined workflow for tracing URLs that are too long to paste in the search bar.
+---
+
+Redirect Trace automatically detects long URLs in your clipboard and provides a dedicated workflow to trace them without overwhelming the search bar.
+
+## How clipboard detection works
+
+When you open the extension, it checks your clipboard for URLs. If it finds a URL longer than 500 characters, it displays a special action to trace it:
+
+```typescript trace-redirects.tsx
+useEffect(() => {
+  const checkClipboard = async () => {
+    const clipboardText = await Clipboard.readText();
+    
+    if (clipboardText) {
+      const isUrl = clipboardText.startsWith("http://") || 
+                    clipboardText.startsWith("https://");
+      const isLong = clipboardText.length > 500;
+      
+      if (isUrl && isLong) {
+        setClipboardUrl(clipboardText);
+        showToast({
+          style: Toast.Style.Success,
+          title: "Long URL detected in clipboard",
+          message: `${Math.round(clipboardText.length / 100) / 10}k characters`,
+        });
+      }
+    }
+  };
+  
+  const timer = setTimeout(checkClipboard, 100);
+  return () => clearTimeout(timer);
+}, []);
+```
+
+The extension checks the clipboard 100ms after opening to ensure it's fully loaded before accessing clipboard data.
+
+## Why 500 characters?
+
+URLs longer than 500 characters often contain:
+
+- **Extensive tracking parameters** - Multiple marketing tokens and analytics IDs
+- **Encoded data** - Base64 or URL-encoded content in parameters
+- **Redirect chains** - URLs that encode the destination URL as a parameter
+- **Email tracking** - Newsletter platforms that add long unique identifiers
+
+These URLs are:
+
+- Difficult to paste in search bars without truncation
+- Hard to read or analyze visually
+- Likely to benefit from tracking removal
+
+<Info>
+  The 500-character threshold is chosen to catch URLs that are genuinely problematic while avoiding false positives on normal long URLs.
+</Info>
+
+## URL detection criteria
+
+The clipboard content must meet both criteria to trigger detection:
+
+1. **Start with a protocol** - Must begin with `http://` or `https://`
+2. **Exceed length threshold** - Must be longer than 500 characters
+
+```typescript trace-redirects.tsx
+const isUrl = clipboardText.startsWith("http://") || 
+              clipboardText.startsWith("https://");
+const isLong = clipboardText.length > 500;
+
+if (isUrl && isLong) {
+  // Trigger long URL workflow
+}
+```
+
+This ensures the extension only activates for actual URLs, not other long text content.
+
+## Using clipboard URLs
+
+When a long URL is detected, you see a dedicated list item:
+
+**Title** - "Paste Long URL From Clipboard"
+
+**Subtitle** - Preview of the first 100 characters
+
+**Accessory** - Character count formatted as "X.Xk chars"
+
+**Actions available:**
+
+- **Trace This URL** - Start analyzing the redirect chain
+- **Copy Full URL** - Copy the complete URL to clipboard
+- **Clear Clipboard Detection** - Dismiss the detected URL
+
+<Note>
+  The extension automatically displays the character count in kilocharacters (e.g., "1.5k chars") to give you a sense of the URL's length.
+</Note>
+
+## Processing long URLs
+
+When you trace a long URL, the extension shows progress feedback:
+
+```typescript trace-redirects.tsx
+if (validatedUrl.length > 500) {
+  showToast({
+    style: Toast.Style.Animated,
+    title: "Processing Long URL",
+    message: `${Math.round(validatedUrl.length / 100) / 10}k characters - analyzing...`,
+  });
+}
+```
+
+This reassures you that the extension is working, even if processing takes a moment due to the URL's complexity.
+
+## Manual clipboard check
+
+If automatic detection doesn't work or you copy a URL after opening the extension, you can manually trigger clipboard detection:
+
+1. Copy a URL to your clipboard
+2. Open Redirect Trace
+3. Press `Cmd+V` to check clipboard
+4. The extension analyzes clipboard content
+
+```typescript trace-redirects.tsx
+const checkClipboardManually = async () => {
+  const clipboardText = await Clipboard.readText();
+  
+  if (!clipboardText) {
+    showToast({
+      style: Toast.Style.Failure,
+      title: "No clipboard content",
+      message: "Copy a URL to clipboard first",
+    });
+    return;
+  }
+  
+  // Validate and process URL
+};
+```
+
+**For URLs under 500 characters** - The extension pastes them directly into the search bar.
+
+**For URLs over 500 characters** - The extension activates the long URL workflow.
+
+**For non-URLs** - The extension shows an error message.
+
+## Character count display
+
+The extension shows URL length in different formats:
+
+**In search results:**
+```typescript trace-redirects.tsx
+text: step.url.length > 100
+  ? `${Math.round(step.url.length / 100) / 10}k`
+  : `${step.url.length}`
+```
+
+**In toast messages:**
+```typescript trace-redirects.tsx
+message: `${Math.round(clipboardText.length / 100) / 10}k characters`
+```
+
+**In accessories:**
+```typescript trace-redirects.tsx
+text: redirectChain.finalUrl.length > 100
+  ? `${Math.round(redirectChain.finalUrl.length / 100) / 10}k chars`
+  : `${redirectChain.finalUrl.length} chars`
+```
+
+This helps you quickly understand whether a URL is unusually long.
+
+## Workflow comparison
+
+<Accordion title="Standard workflow (short URLs)">
+  For URLs under 500 characters:
+
+  1. Open Redirect Trace
+  2. Paste URL in search bar
+  3. Results appear automatically after 500ms debounce
+  4. View redirect chain
+</Accordion>
+
+<Accordion title="Clipboard workflow (long URLs)">
+  For URLs over 500 characters:
+
+  1. Copy URL to clipboard
+  2. Open Redirect Trace
+  3. See "Long URL detected" notification
+  4. Select "Paste Long URL From Clipboard" item
+  5. Press Enter or click "Trace This URL"
+  6. View redirect chain
+</Accordion>
+
+<Info>
+  The clipboard workflow prevents performance issues that could occur from pasting extremely long URLs into the search bar's debounced input.
+</Info>
+
+## Clipboard privacy
+
+The extension:
+
+- **Only reads clipboard when you open it** - No background clipboard monitoring
+- **Only checks for URLs** - Ignores non-URL content
+- **Doesn't store clipboard data** - Content is only held in component state while the extension is open
+- **Handles access failures gracefully** - Falls back to manual workflow if clipboard access is denied
+
+```typescript trace-redirects.tsx
+try {
+  const clipboardText = await Clipboard.readText();
+  // Process clipboard content
+} catch {
+  // Clipboard access failed, ignore silently
+}
+```
+
+<Note>
+  You can always use the manual search bar workflow if you prefer not to use clipboard integration.
+</Note>

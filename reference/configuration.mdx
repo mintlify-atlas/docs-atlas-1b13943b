@@ -1,0 +1,106 @@
+---
+title: Configuration
+description: Configure Redirect Trace preferences to customize redirect tracing behavior
+---
+
+You can customize Redirect Trace behavior through extension preferences. Access preferences through Raycast Settings > Extensions > Redirect Trace.
+
+## Preferences
+
+<ParamField path="maxRedirects" type="number" default="10">
+  Maximum number of redirects to follow before stopping the trace.
+
+  **Type:** Textfield  
+  **Required:** No  
+  **Default:** `10`
+
+  Controls how many redirect hops the extension will follow in a chain. When the limit is reached, the trace stops and marks the chain as incomplete.
+
+  <Accordion title="When to adjust this setting">
+    - **Increase** if you encounter legitimate redirect chains that exceed 10 hops (rare but possible with complex marketing campaigns)
+    - **Decrease** if you want faster results and don't need to follow long chains
+    - Keep default for most use cases
+  </Accordion>
+
+  <Warning>
+    Setting this value too high may result in longer processing times or potential infinite redirect loops consuming resources.
+  </Warning>
+</ParamField>
+
+<ParamField path="timeout" type="number" default="5000">
+  Request timeout in milliseconds for each HTTP request in the redirect chain.
+
+  **Type:** Textfield  
+  **Required:** No  
+  **Default:** `5000` (5 seconds)
+
+  Sets how long to wait for each HTTP request before aborting with a timeout error. This applies to each step in the redirect chain, not the total trace time.
+
+  <Accordion title="When to adjust this setting">
+    - **Increase** if you're tracing URLs with slow-responding servers
+    - **Decrease** if you want faster failure detection for unreachable servers
+    - **Network considerations:** Slower connections may require higher values
+  </Accordion>
+
+  <Warning>
+    Values below 3000ms (3 seconds) may cause premature timeouts on slower networks or servers.
+  </Warning>
+</ParamField>
+
+## Configuration in code
+
+The extension reads preferences using the Raycast API:
+
+```typescript
+import { getPreferenceValues } from "@raycast/api";
+
+interface Preferences {
+  maxRedirects: string;
+  timeout: string;
+}
+
+const preferences = getPreferenceValues<Preferences>();
+const maxRedirects = parseInt(preferences.maxRedirects || "10", 10);
+const timeout = parseInt(preferences.timeout || "5000", 10);
+```
+
+## Default behavior
+
+When preferences are not explicitly set:
+
+- Extension follows up to 10 redirects per chain
+- Each request times out after 5 seconds
+- Chains exceeding limits are marked as incomplete
+- Timeout errors display: `Request timeout after {timeout}ms`
+
+## Examples
+
+<Accordion title="Tracing complex marketing campaigns">
+  Some marketing URLs pass through multiple tracking services:
+  
+  **Recommended settings:**
+  - Max Redirects: `15`
+  - Timeout: `7000`
+  
+  This handles campaigns with 10+ redirect hops while accommodating slower tracking servers.
+</Accordion>
+
+<Accordion title="Quick validation on fast networks">
+  For simple redirect checks on reliable infrastructure:
+  
+  **Recommended settings:**
+  - Max Redirects: `5`
+  - Timeout: `3000`
+  
+  Provides faster results when you don't need to follow long chains.
+</Accordion>
+
+<Accordion title="Debugging slow or unreliable servers">
+  When working with servers that have slow response times:
+  
+  **Recommended settings:**
+  - Max Redirects: `10` (default)
+  - Timeout: `10000`
+  
+  Gives servers more time to respond while maintaining reasonable redirect limits.
+</Accordion>

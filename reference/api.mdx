@@ -1,0 +1,259 @@
+---
+title: API reference
+description: Internal TypeScript interfaces and functions used in Redirect Trace
+---
+
+This page documents the core TypeScript interfaces and functions that power Redirect Trace. Use this reference when extending the code or understanding the internal architecture.
+
+## Interfaces
+
+### RedirectChain
+
+Represents the complete result of tracing a URL through its redirect chain.
+
+```typescript
+interface RedirectChain {
+  originalUrl: string;
+  finalUrl: string;
+  steps: RedirectStep[];
+  totalRedirects: number;
+  isComplete: boolean;
+  error?: string;
+}
+```
+
+<ResponseField name="originalUrl" type="string" required>
+  The validated input URL that was traced. This URL has been processed by `validateUrl()` and may include protocol additions.
+</ResponseField>
+
+<ResponseField name="finalUrl" type="string" required>
+  The last URL reached in the redirect chain. This is either the final destination or the URL where the trace stopped (due to limits or errors).
+</ResponseField>
+
+<ResponseField name="steps" type="RedirectStep[]" required>
+  Array of all redirect steps encountered, in chronological order. Each step contains the URL, HTTP status, and response headers.
+</ResponseField>
+
+<ResponseField name="totalRedirects" type="number" required>
+  Count of how many redirects occurred. A value of 0 means the URL didn't redirect. Maximum value is determined by the `maxRedirects` preference.
+</ResponseField>
+
+<ResponseField name="isComplete" type="boolean" required>
+  Indicates whether the trace completed successfully.
+  
+  - `true`: The trace reached a non-redirect status code (200, 404, etc.)
+  - `false`: The trace stopped due to hitting `maxRedirects` limit or encountering an error
+</ResponseField>
+
+<ResponseField name="error" type="string">
+  Error message if the trace failed. Only present when an error occurred. See [troubleshooting](/reference/troubleshooting) for common error messages.
+</ResponseField>
+
+### RedirectStep
+
+Represents a single step in the redirect chain.
+
+```typescript
+interface RedirectStep {
+  url: string;
+  status: number;
+  statusText: string;
+  headers: Record<string, string>;
+}
+```
+
+<ResponseField name="url" type="string" required>
+  The URL that was requested for this step. This is the current location in the redirect chain.
+</ResponseField>
+
+<ResponseField name="status" type="number" required>
+  HTTP status code returned by the server.
+  
+  Common codes:
+  - `301`: Permanent redirect
+  - `302`: Temporary redirect
+  - `307`: Temporary redirect (method preserved)
+  - `308`: Permanent redirect (method preserved)
+  - `200`: Success (final destination)
+</ResponseField>
+
+<ResponseField name="statusText" type="string" required>
+  Human-readable status text corresponding to the status code (e.g., "Moved Permanently", "Found", "OK").
+</ResponseField>
+
+<ResponseField name="headers" type="Record<string, string>" required>
+  All HTTP response headers as key-value pairs. The `location` header contains the next URL in redirect responses (3xx status codes).
+
+  ```typescript
+  // Example headers
+  {
+    "location": "https://example.com/new-path",
+    "content-type": "text/html",
+    "cache-control": "no-cache"
+  }
+  ```
+</ResponseField>
+
+### Preferences
+
+Configuration interface for extension preferences.
+
+```typescript
+interface Preferences {
+  maxRedirects: string;
+  timeout: string;
+}
+```
+
+<ResponseField name="maxRedirects" type="string">
+  String representation of maximum redirects to follow. Parsed to integer with default `"10"`.
+</ResponseField>
+
+<ResponseField name="timeout" type="string">
+  String representation of timeout in milliseconds. Parsed to integer with default `"5000"`.
+</ResponseField>
+
+## Functions
+
+### followRedirects()
+
+Traces a URL through its redirect chain and returns the complete analysis.
+
+```typescript
+async function followRedirects(url: string): Promise<RedirectChain>
+```
+
+<ParamField path="url" type="string" required>
+  The URL to trace. Can be with or without protocol (http/https). Will be validated and normalized.
+</ParamField>
+
+<ResponseField name="returns" type="Promise<RedirectChain>">
+  Promise that resolves to a `RedirectChain` object containing all trace results.
+</ResponseField>
+
+**Behavior:**
+
+1. Validates and normalizes the input URL using `validateUrl()`
+2. Makes HTTP requests with `redirect: "manual"` to prevent automatic following
+3. Collects each redirect step including status codes and headers
+4. Stops when:
+   - A non-redirect status code is received (200, 404, etc.)
+   - `maxRedirects` limit is reached
+   - A timeout or network error occurs
+   - No `location` header is present in a 3xx response
+
+**Request headers sent:**
+
+```typescript
+{
+  "User-Agent": "RedirectTrace-Raycast-Extension/1.0",
+  "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+  "Accept-Language": "en-US,en;q=0.9",
+  "DNT": "1",
+  "Connection": "keep-alive"
+}
+```
+
+### validateUrl()
+
+Normalizes and validates URLs before tracing.
+
+```typescript
+function validateUrl(url: string): string
+```
+
+<ParamField path="url" type="string" required>
+  Raw URL input from user (may lack protocol or contain whitespace).
+</ParamField>
+
+<ResponseField name="returns" type="string">
+  Validated and normalized URL with protocol included.
+</ResponseField>
+
+**Transformations:**
+
+- Trims leading/trailing whitespace
+- Removes line breaks and tabs (`\r`, `\n`, `\t`)
+- Adds `https://` protocol if missing
+- Returns empty string for empty input
+
+**Examples:**
+
+```typescript
+validateUrl("example.com")           // "https://example.com"
+validateUrl("http://example.com")    // "http://example.com"
+validateUrl("  example.com\n")       // "https://example.com"
+validateUrl("")                      // ""
+```
+
+### cleanTrackingParams()
+
+Removes tracking parameters from URLs to get clean destination URLs.
+
+```typescript
+function cleanTrackingParams(url: string): string
+```
+
+<ParamField path="url" type="string" required>
+  URL potentially containing tracking parameters.
+</ParamField>
+
+<ResponseField name="returns" type="string">
+  URL with tracking parameters removed. Falls back to original URL if parsing fails.
+</ResponseField>
+
+**Removed parameters:**
+
+<Accordion title="Google Analytics & Marketing">
+  - `utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content`
+  - `gclid`, `gclsrc`, `dclid`, `gbraid`, `wbraid`
+</Accordion>
+
+<Accordion title="Facebook/Meta tracking">
+  - `fbclid`, `fb_action_ids`, `fb_action_types`, `fb_ref`, `fb_source`
+</Accordion>
+
+<Accordion title="Email marketing platforms">
+  - `mc_cid`, `mc_eid` (MailChimp)
+  - `_hsenc`, `_hsmi` (HubSpot)
+  - `vero_conv`, `vero_id` (Vero)
+  - `mkt_tok` (Marketo)
+</Accordion>
+
+<Accordion title="Social media platforms">
+  - `igshid`, `igsh` (Instagram)
+  - `ref_src`, `ref_url`, `share`, `shared`
+</Accordion>
+
+<Accordion title="Analytics platforms">
+  - `_ga`, `_gl` (Google Analytics)
+  - `s_cid`, `ncid` (Adobe/Omniture)
+  - `pk_campaign`, `pk_kwd` (Matomo)
+</Accordion>
+
+**Heuristic cleaning:**
+
+Also removes parameters that match tracking patterns:
+- Long random strings (>20 chars) with alphanumeric values
+- Parameters starting with: `track`, `trk`, `tid`, `cid`, `sid`, `campaign`, etc.
+- Base64-encoded or URL-encoded data blobs
+
+**Examples:**
+
+```typescript
+cleanTrackingParams("https://example.com/page?utm_source=email&id=123")
+// "https://example.com/page?id=123"
+
+cleanTrackingParams("https://example.com/page?fbclid=xyz123&gclid=abc456")
+// "https://example.com/page"
+```
+
+## Error handling
+
+All functions handle errors gracefully:
+
+- `followRedirects()` returns a `RedirectChain` with `error` field populated
+- `validateUrl()` returns empty string for invalid input
+- `cleanTrackingParams()` returns original URL if parsing fails
+
+See [troubleshooting](/reference/troubleshooting) for specific error messages and solutions.

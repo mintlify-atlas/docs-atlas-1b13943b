@@ -1,0 +1,203 @@
+---
+title: Tracking removal
+description: Remove 50+ types of tracking parameters from URLs to get clean, shareable links without compromising functionality.
+---
+
+Redirect Trace automatically identifies and removes tracking parameters from URLs, giving you clean links free of analytics tokens and marketing identifiers.
+
+## How tracking removal works
+
+The extension analyzes URL parameters and removes known tracking identifiers while preserving essential query parameters needed for the page to function.
+
+```typescript trace-redirects.tsx
+const cleanTrackingParams = (url: string): string => {
+  const urlObj = new URL(url);
+  
+  // Remove tracking parameters
+  trackingParams.forEach((param) => {
+    urlObj.searchParams.delete(param);
+  });
+  
+  return urlObj.toString();
+};
+```
+
+You can access the clean URL for any redirect chain step or the final destination using the "Copy Clean URL" action.
+
+## Tracking parameters removed
+
+The extension removes 50+ types of tracking parameters used by major analytics and marketing platforms:
+
+<Accordion title="Google Analytics & Marketing">
+  These parameters track campaign performance and ad clicks across Google's advertising platforms:
+
+  - `utm_source` - Identifies the traffic source (e.g., newsletter, social media)
+  - `utm_medium` - Identifies the marketing medium (e.g., email, CPC)
+  - `utm_campaign` - Identifies the specific campaign name
+  - `utm_term` - Identifies paid search keywords
+  - `utm_content` - Differentiates similar content or links
+  - `gclid` - Google Click Identifier for Google Ads
+  - `gclsrc` - Google Click Source identifier
+  - `dclid` - DoubleClick Click Identifier
+  - `gbraid` - Google conversion tracking parameter
+  - `wbraid` - Google web-to-app conversion tracking
+  - `_ga` - Google Analytics client ID
+  - `_gl` - Google Analytics cross-domain linking
+</Accordion>
+
+<Accordion title="Facebook & Meta platforms">
+  These parameters track clicks from Facebook, Instagram, and other Meta properties:
+
+  - `fbclid` - Facebook Click Identifier
+  - `fb_action_ids` - Facebook action tracking IDs
+  - `fb_action_types` - Facebook action type identifiers
+  - `fb_ref` - Facebook referrer parameter
+  - `fb_source` - Facebook traffic source identifier
+  - `igshid` - Instagram share identifier (legacy)
+  - `igsh` - Instagram share identifier
+</Accordion>
+
+<Accordion title="Email & Marketing platforms">
+  Common tracking parameters from email marketing services and automation platforms:
+
+  - `mc_cid` - MailChimp campaign ID
+  - `mc_eid` - MailChimp email ID
+  - `inf_ver` - Inflection tracking version
+  - `inf_ctx` - Inflection tracking context
+  - `_hsenc` - HubSpot encryption parameter
+  - `_hsmi` - HubSpot message ID
+  - `vero_conv` - Vero conversion tracking
+  - `vero_id` - Vero user identifier
+  - `mkt_tok` - Marketo tracking token
+  - `newsletter_id` - Generic newsletter identifier
+  - `email_id` - Generic email campaign ID
+  - `subscriber_id` - Email subscriber identifier
+</Accordion>
+
+<Accordion title="Microsoft & Bing">
+  Tracking parameters from Microsoft's advertising platform:
+
+  - `msclkid` - Microsoft Click Identifier for Bing Ads
+</Accordion>
+
+<Accordion title="Analytics platforms">
+  Parameters from various web analytics services:
+
+  - `pk_campaign` - Piwik/Matomo campaign tracking
+  - `pk_kwd` - Piwik/Matomo keyword tracking
+  - `s_cid` - Adobe/Omniture campaign identifier
+  - `ncid` - Adobe/Omniture tracking code
+</Accordion>
+
+<Accordion title="Affiliate & Attribution tracking">
+  Parameters used by affiliate networks and attribution systems:
+
+  - `_branch_match_id` - Branch.io matching identifier
+  - `_branch_referrer` - Branch.io referrer tracking
+  - `zanpid` - Rakuten/Commission Junction parameter
+  - `ranMID` - Rakuten merchant ID
+  - `ranEAID` - Rakuten advertiser ID
+  - `ranSiteID` - Rakuten site identifier
+  - `affiliate_id` - Generic affiliate identifier
+  - `aff_id` - Shortened affiliate ID
+  - `click_id` - Generic click tracking ID
+  - `clickid` - Alternative click tracking parameter
+</Accordion>
+
+<Accordion title="Generic tracking parameters">
+  Common tracking parameters used across various platforms:
+
+  - `source` - Traffic source identifier
+  - `medium` - Marketing medium
+  - `campaign` - Campaign name
+  - `trk` - Generic tracking parameter
+  - `trkCampaign` - Campaign tracking identifier
+  - `ref` - Referrer tracking
+  - `referrer` - Referrer information
+  - `cmpid` - Campaign ID
+  - `WT.mc_id` - Webtrends marketing campaign ID
+  - `ref_src` - Reference source
+  - `ref_url` - Reference URL
+  - `share` - Share tracking parameter
+  - `shared` - Shared content identifier
+</Accordion>
+
+## Heuristic tracking detection
+
+Beyond the explicit list, the extension uses pattern matching to identify likely tracking parameters:
+
+```typescript trace-redirects.tsx
+// Remove params that look like tracking IDs (long random strings)
+if (param.length > 10 && /^[a-zA-Z0-9_-]+$/.test(param)) {
+  const value = urlObj.searchParams.get(param);
+  if (value && value.length > 20 && /^[a-zA-Z0-9_=+/-]+$/.test(value)) {
+    urlObj.searchParams.delete(param);
+  }
+}
+```
+
+This catches:
+
+- **Long parameter names** (>10 characters) with long values (>20 characters)
+- **Tracking-like names** - Parameters starting with `track`, `trk`, `tid`, `cid`, `sid`, `eid`, `campaign`, `source`, `medium`, `ref`, or `click`
+- **Encoded data** - Parameters with values that look like base64 or other encoded formats
+
+<Info>
+  The heuristic detection helps catch new or uncommon tracking parameters that aren't in the explicit list.
+</Info>
+
+## Malformed URL handling
+
+Some URLs have tracking parameters embedded in the path instead of the query string. The extension detects and cleans these:
+
+```typescript trace-redirects.tsx
+// Handle malformed URLs that have parameters in the path
+let cleanPath = urlObj.pathname;
+if (cleanPath.includes("&")) {
+  const pathParts = cleanPath.split("&");
+  cleanPath = pathParts[0];
+  urlObj.pathname = cleanPath;
+}
+```
+
+This handles URLs like:
+
+```
+https://example.com/page&utm_source=email&fbclid=123
+```
+
+And converts them to:
+
+```
+https://example.com/page
+```
+
+## Viewing cleaned URLs
+
+You can access cleaned URLs in several ways:
+
+**Copy clean URL** - Use `Cmd+Shift+L` on any redirect step or final destination to copy the URL without tracking parameters.
+
+**Visual comparison** - When tracking parameters are detected, a "Clean URL (Tracking Removed)" item appears in the summary showing how many characters were removed.
+
+**Show clean URL** - Use `Cmd+L` to display the clean URL in a toast notification.
+
+**Full chain report** - The complete chain report includes both original and clean versions of the final URL.
+
+<Note>
+  The character count difference between original and clean URLs shows you exactly how much tracking data was present.
+</Note>
+
+## When to use clean URLs
+
+Use cleaned URLs when:
+
+- **Sharing links** - Remove tracking before sharing with others
+- **Bookmarking** - Save clean URLs that won't expire
+- **Privacy** - Avoid passing tracking data between sites
+- **Link analysis** - See the actual URL without marketing noise
+- **Testing** - Verify that pages work without tracking parameters
+
+<Info>
+  Removing tracking parameters doesn't affect the page content. The parameters are used only for analytics and attribution.
+</Info>

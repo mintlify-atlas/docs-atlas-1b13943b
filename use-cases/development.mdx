@@ -1,0 +1,342 @@
+---
+title: Development use cases
+description: Debug redirect issues, test API endpoints, analyze SEO impact, and verify implementation with redirect tracing
+---
+
+Redirect Trace helps developers debug redirect logic, test API behavior, analyze SEO implications, and verify correct implementation of redirects in applications.
+
+## API testing
+
+Test and debug redirect behavior in your APIs and web applications by tracing how your endpoints handle redirects.
+
+<CardGroup cols={2}>
+  <Card title="Endpoint verification" icon="server">
+    Verify that API endpoints return correct redirect status codes (301, 302, 307, 308) for different scenarios
+  </Card>
+  <Card title="Redirect logic" icon="code-branch">
+    Test conditional redirect logic based on authentication, location, device type, or other factors
+  </Card>
+  <Card title="Header inspection" icon="list">
+    Inspect HTTP headers at each redirect step to debug cookie, authentication, and CORS issues
+  </Card>
+  <Card title="Status codes" icon="circle-check">
+    Verify correct HTTP status codes throughout the redirect chain for proper browser and crawler behavior
+  </Card>
+</CardGroup>
+
+### Common API redirect patterns
+
+<Accordion title="Authentication redirects">
+**Use case:** Testing login flows and protected resource redirects.
+
+**Example redirect chain:**
+```
+GET /protected-resource
+  → 302 Found
+  → Location: /login?redirect=/protected-resource
+
+GET /login?redirect=/protected-resource
+  → (User logs in)
+  → 302 Found
+  → Location: /protected-resource
+
+GET /protected-resource
+  → 200 OK
+```
+
+**Testing with Redirect Trace:**
+- Verify the redirect parameter is preserved correctly
+- Check that the final destination matches the original requested resource
+- Confirm status codes are appropriate (302 for temporary redirects)
+</Accordion>
+
+<Accordion title="URL normalization">
+**Use case:** Testing canonical URL redirects and slug normalization.
+
+**Example redirect chain:**
+```
+GET /Product-Name-With-Caps
+  → 301 Moved Permanently
+  → Location: /product-name-with-caps
+
+GET /product-name-with-caps
+  → 200 OK
+```
+
+**Testing with Redirect Trace:**
+- Verify 301 (permanent) is used for SEO-friendly redirects
+- Confirm only one redirect is needed (no redirect chains)
+- Check that the final URL matches your canonical format
+</Accordion>
+
+<Accordion title="API versioning">
+**Use case:** Testing API version redirects and deprecation flows.
+
+**Example redirect chain:**
+```
+GET /api/v1/users
+  → 308 Permanent Redirect
+  → Location: /api/v2/users
+  → Header: Sunset: Sat, 31 Dec 2024 23:59:59 GMT
+
+GET /api/v2/users
+  → 200 OK
+```
+
+**Testing with Redirect Trace:**
+- Verify 308 status code preserves HTTP method (POST, PUT, etc.)
+- Check deprecation headers are present
+- Confirm new API version endpoint is correct
+</Accordion>
+
+### Development workflow
+
+Use Redirect Trace during development to verify redirect implementation:
+
+1. **Deploy to staging** - Deploy your redirect logic to a test environment
+2. **Trace test URLs** - Copy your test URLs and trace them in Redirect Trace
+3. **Verify status codes** - Check that redirects use correct status codes (301 vs 302 vs 307 vs 308)
+4. **Inspect headers** - Review response headers for correct Location, Cache-Control, and custom headers
+5. **Test edge cases** - Trace URLs with special characters, query parameters, and different formats
+6. **Document behavior** - Use "Copy Full Chain Report" to document expected behavior
+
+<Info>
+Different redirect status codes have different semantic meanings. Use 301/308 for permanent redirects (SEO and caching benefits) and 302/307 for temporary redirects.
+</Info>
+
+## SEO analysis
+
+Analyze how redirects affect SEO by identifying redirect chains, checking status codes, and verifying canonical URLs.
+
+### SEO redirect best practices
+
+<CardGroup cols={1}>
+  <Card title="Use 301 for permanent redirects" icon="link-slash">
+    When a page has permanently moved, use 301 status code to transfer SEO value to the new URL
+  </Card>
+  <Card title="Minimize redirect chains" icon="route">
+    Each redirect dilutes SEO value - aim for direct redirects without intermediate steps
+  </Card>
+  <Card title="Avoid redirect loops" icon="arrows-rotate">
+    Test for circular redirects that create infinite loops and prevent indexing
+  </Card>
+  <Card title="Preserve URL parameters" icon="gear">
+    Ensure important parameters (like pagination, filters) survive redirects for proper indexing
+  </Card>
+</CardGroup>
+
+### Common SEO issues
+
+<Accordion title="Redirect chains">
+**Problem:** Multiple redirects between old and new URLs dilute SEO value.
+
+**Example:**
+```
+example.com/old-page
+  → 301 → example.com/temporary-page
+  → 301 → example.com/new-page
+```
+
+**Impact:** Search engines may not follow all redirects, resulting in lost rankings.
+
+**Solution:** Update all old URLs to redirect directly to the final destination:
+```
+example.com/old-page
+  → 301 → example.com/new-page
+```
+
+Use Redirect Trace to identify chains longer than 1 redirect, then update your redirect rules.
+</Accordion>
+
+<Accordion title="302 vs 301 confusion">
+**Problem:** Using temporary 302 redirects instead of permanent 301 redirects.
+
+**Example:**
+```
+example.com/product-old-name
+  → 302 Found
+  → example.com/product-new-name
+```
+
+**Impact:** Search engines don't transfer page authority to the new URL, maintaining rankings on the old URL that no longer exists.
+
+**Solution:** Change to 301 Moved Permanently:
+```
+example.com/product-old-name
+  → 301 Moved Permanently
+  → example.com/product-new-name
+```
+
+Trace your redirects regularly to ensure correct status codes.
+</Accordion>
+
+<Accordion title="HTTP to HTTPS redirect chains">
+**Problem:** Multiple steps from HTTP to HTTPS due to www/non-www redirects.
+
+**Example:**
+```
+http://example.com
+  → 301 → http://www.example.com
+  → 301 → https://www.example.com
+```
+
+**Impact:** Extra redirect adds latency and dilutes SEO signals.
+
+**Solution:** Redirect directly from HTTP non-www to HTTPS www:
+```
+http://example.com
+  → 301 → https://www.example.com
+```
+
+Configure your server to handle both redirects in a single step.
+</Accordion>
+
+### SEO audit workflow
+
+1. **Crawl your site** - Use a site crawler to extract all URLs
+2. **Identify redirected URLs** - Filter for pages that redirect (301, 302, etc.)
+3. **Trace each redirect** - Use Redirect Trace to analyze the redirect chain
+4. **Document issues** - Note chains longer than 1 redirect, incorrect status codes, or broken redirects
+5. **Fix and verify** - Update redirect rules and re-trace to verify fixes
+
+<Info>
+Run this audit quarterly to catch new redirect chains introduced by site updates, migrations, or content changes.
+</Info>
+
+## Performance debugging
+
+Debug slow page loads and performance issues caused by redirect chains.
+
+### Performance impact of redirects
+
+Each redirect adds:
+- **DNS lookup** - 20-120ms for the next domain
+- **TCP connection** - 50-200ms to establish connection
+- **TLS handshake** - 50-250ms for HTTPS sites
+- **HTTP request/response** - 50-500ms depending on server location
+
+**Total per redirect:** 170-1,070ms of added latency
+
+A chain with 3 redirects can add 500-3,000ms to page load time.
+
+<CardGroup cols={2}>
+  <Card title="Mobile performance" icon="mobile">
+    Mobile networks have higher latency - redirects hurt mobile users more than desktop users
+  </Card>
+  <Card title="International users" icon="globe">
+    Redirects across geographic regions add significant latency for international visitors
+  </Card>
+</CardGroup>
+
+### Debugging workflow
+
+When users report slow page loads:
+
+1. **Trace the problematic URL** - Copy the exact URL users are accessing
+2. **Count redirects** - Check the redirect count in the summary
+3. **Identify cross-domain redirects** - Look for redirects between different domains (adds DNS + connection time)
+4. **Test from different locations** - If possible, test the same URL from different geographic regions
+5. **Measure improvement** - After optimizing, trace again to verify fewer redirects
+
+<Accordion title="Example: Debugging slow mobile page loads">
+**Scenario:** Mobile users report your landing page is slow, but desktop users don't see issues.
+
+**Investigation:**
+1. Trace the landing page URL
+2. Discover a 4-redirect chain:
+   ```
+   short.link/campaign
+     → mobile-tracker.com/click?id=123
+     → analytics-platform.com/track
+     → yoursite.com/landing
+   ```
+
+3. On mobile networks (higher latency), each redirect takes 300-500ms
+4. Total added latency: 900-2,000ms
+
+**Solution:**
+- Replace the URL shortener with a direct link
+- Consolidate tracking to reduce redirect steps
+- Result: 1 redirect instead of 3, saving 600-1,500ms on mobile
+</Accordion>
+
+## Redirect verification
+
+Verify that your redirect implementation works correctly across different scenarios and edge cases.
+
+### Test cases to verify
+
+<CardGroup cols={2}>
+  <Card title="Query parameters" icon="question">
+    Verify that query parameters are preserved through redirects
+  </Card>
+  <Card title="URL fragments" icon="hashtag">
+    Test that URL fragments (#section) are handled correctly
+  </Card>
+  <Card title="Special characters" icon="at">
+    Check redirects with spaces, international characters, and symbols
+  </Card>
+  <Card title="Trailing slashes" icon="slash-forward">
+    Verify consistent behavior with and without trailing slashes
+  </Card>
+</CardGroup>
+
+### Edge case testing
+
+Test these edge cases with Redirect Trace:
+
+```javascript
+// Query parameter preservation
+example.com/old?search=test&sort=date
+  → Should redirect to → example.com/new?search=test&sort=date
+
+// Multiple parameters
+example.com/page?utm_source=email&utm_medium=newsletter&ref=campaign
+  → Verify all parameters are preserved
+
+// Encoded characters
+example.com/search?q=hello%20world
+  → Check that encoding is maintained
+
+// Fragment identifiers
+example.com/page#section-2
+  → Note: Fragments are client-side and won't appear in server redirects
+```
+
+<Info>
+URL fragments (#section) are not sent to the server, so they won't appear in Redirect Trace results. Browsers handle fragment navigation client-side after the final redirect completes.
+</Info>
+
+## Integration with development tools
+
+Use Redirect Trace alongside your existing development workflow:
+
+### CI/CD integration
+
+Add redirect testing to your continuous integration pipeline:
+
+1. **Deploy to staging** - Automated deployment after code merge
+2. **Run redirect tests** - Script that traces critical URLs and verifies expected behavior
+3. **Verify results** - Check redirect count, status codes, and final destinations
+4. **Block deployment** - Fail the build if redirects don't match expectations
+
+### Local development
+
+Use Redirect Trace during local development:
+
+- **Test localhost URLs** - Trace redirects in your local development environment
+- **Debug proxy issues** - Verify that development proxies and tunnels redirect correctly
+- **Test external integrations** - Check how third-party services redirect back to your local server
+
+### Monitoring and alerts
+
+Set up monitoring to catch redirect changes:
+
+1. **Baseline your redirects** - Trace all important URLs and document expected redirect chains
+2. **Regular checks** - Weekly or monthly, re-trace the same URLs
+3. **Alert on changes** - Flag when redirect count increases or final destination changes
+4. **Investigate differences** - Use Redirect Trace to understand what changed
+
+<Info>
+Create a test suite of your most important URLs (homepage, product pages, checkout) and trace them regularly to catch unexpected redirect changes before they impact users.
+</Info>

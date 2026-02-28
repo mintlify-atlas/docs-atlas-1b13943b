@@ -1,0 +1,109 @@
+---
+title: Installation
+description: Install Redirect Trace for Raycast from the Raycast Store or build from source.
+---
+
+## Install from Raycast Store
+
+The easiest way to install Redirect Trace is directly from the Raycast Store.
+
+<Steps>
+  <Step title="Open Raycast Store">
+    Press `Cmd + Space` to open Raycast, then search for "Store" to open the Raycast Store
+  </Step>
+  <Step title="Search for Redirect Trace">
+    Search for "Redirect Trace" in the store search bar
+  </Step>
+  <Step title="Install the extension">
+    Click the install button to add Redirect Trace to your Raycast installation
+  </Step>
+</Steps>
+
+<Tip>
+  You can also install directly from the [Raycast Store page](https://www.raycast.com/nurkamol/redirect-trace).
+</Tip>
+
+## Install from source
+
+If you want to build from source or contribute to development, you can clone and build the extension locally.
+
+<Steps>
+  <Step title="Clone the repository">
+    Clone the Redirect Trace repository from GitHub:
+    ```bash
+    git clone https://github.com/nurkamol/redirect-trace.git
+    cd redirect-trace
+    ```
+  </Step>
+  <Step title="Install dependencies">
+    Install the required Node.js dependencies:
+    ```bash
+    npm install
+    ```
+  </Step>
+  <Step title="Build the extension">
+    Build the extension for Raycast:
+    ```bash
+    npm run build
+    ```
+  </Step>
+</Steps>
+
+<Note>
+  Building from source requires Node.js and npm. The extension uses TypeScript and React with the Raycast API.
+</Note>
+
+## Development mode
+
+If you're developing or customizing the extension, you can run it in development mode with hot reload:
+
+```bash
+npm run dev
+```
+
+This starts the Raycast development server, which automatically reloads the extension when you make changes to the source code.
+
+## Configuration
+
+After installation, you can configure Redirect Trace preferences in Raycast:
+
+1. Open Raycast (`Cmd + Space`)
+2. Search for "Redirect Trace"
+3. Press `Cmd + ,` to open preferences
+4. Configure the following settings:
+
+### Max redirects
+
+Set the maximum number of redirects to follow (default: 10).
+
+```typescript
+interface Preferences {
+  maxRedirects: string; // Default: "10"
+  timeout: string;      // Default: "5000"
+}
+```
+
+### Timeout
+
+Set the request timeout in milliseconds (default: 5000ms).
+
+<Tip>
+  If you're analyzing slow servers or complex redirect chains, increase the timeout value.
+</Tip>
+
+## System requirements
+
+- Raycast 1.100.2 or later
+- macOS (Raycast requirement)
+- Internet connection for tracing URLs
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Quick start" icon="rocket" href="/quickstart">
+    Learn how to trace your first URL
+  </Card>
+  <Card title="Configuration" icon="gear" href="/reference/configuration">
+    Customize Redirect Trace settings
+  </Card>
+</CardGroup>

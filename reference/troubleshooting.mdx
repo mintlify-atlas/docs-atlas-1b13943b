@@ -1,0 +1,321 @@
+---
+title: Troubleshooting
+description: Common issues, error messages, and solutions when tracing URL redirects
+---
+
+This page covers common errors you may encounter when using Redirect Trace and how to resolve them.
+
+## Error messages
+
+### Request timeout after {timeout}ms
+
+**Cause:** The HTTP request took longer than your configured timeout setting.
+
+```typescript
+if (fetchError.name === "AbortError") {
+  errorMessage = `Request timeout after ${timeout}ms`;
+}
+```
+
+**Solutions:**
+
+<Accordion title="Increase timeout setting">
+  1. Open Raycast Settings
+  2. Navigate to Extensions > Redirect Trace
+  3. Increase "Timeout (ms)" value (try `10000` for 10 seconds)
+  4. Retry the trace
+</Accordion>
+
+<Accordion title="Check network connection">
+  - Verify you have internet connectivity
+  - Try accessing the URL in a browser
+  - Check if you're behind a proxy or VPN that may slow requests
+</Accordion>
+
+<Accordion title="Server may be slow">
+  Some servers intentionally delay responses. If the URL works in a browser but times out in Redirect Trace, increase the timeout setting.
+</Accordion>
+
+### DNS resolution failed - domain not found
+
+**Cause:** The domain name could not be resolved to an IP address.
+
+```typescript
+if (fetchError.message.includes("ENOTFOUND")) {
+  errorMessage = "DNS resolution failed - domain not found";
+}
+```
+
+**Solutions:**
+
+<Accordion title="Verify the URL">
+  - Check for typos in the domain name
+  - Ensure the domain actually exists (try in a browser)
+  - Verify you included the correct TLD (.com, .org, etc.)
+</Accordion>
+
+<Accordion title="DNS issues">
+  - Your DNS server may be having issues
+  - Try using a different DNS service (Google DNS: 8.8.8.8)
+  - Restart your network connection
+</Accordion>
+
+<Accordion title="Domain expired or deleted">
+  The domain may no longer exist. Verify in a web browser or use a WHOIS lookup service.
+</Accordion>
+
+### Connection refused by server
+
+**Cause:** The server actively rejected the connection attempt.
+
+```typescript
+if (fetchError.message.includes("ECONNREFUSED")) {
+  errorMessage = "Connection refused by server";
+}
+```
+
+**Solutions:**
+
+<Accordion title="Server may be down">
+  - The server might be offline or not accepting connections
+  - Try accessing the URL in a browser to verify
+  - Check if the service has a status page
+</Accordion>
+
+<Accordion title="Port or protocol issues">
+  - Ensure you're using the correct protocol (http vs https)
+  - The service may not be running on standard ports
+  - Try switching between `http://` and `https://`
+</Accordion>
+
+<Accordion title="Firewall blocking">
+  Your firewall or the server's firewall may be blocking the connection. Try from a different network.
+</Accordion>
+
+### SSL certificate error
+
+**Cause:** The server's SSL/TLS certificate is invalid, expired, or untrusted.
+
+```typescript
+if (fetchError.message.includes("certificate")) {
+  errorMessage = "SSL certificate error";
+}
+```
+
+**Solutions:**
+
+<Accordion title="Certificate issues">
+  - The SSL certificate may be expired
+  - Certificate may be self-signed
+  - Certificate may not match the domain name
+  - Try accessing with `http://` instead (if appropriate)
+</Accordion>
+
+<Accordion title="System time issues">
+  - Verify your system clock is set correctly
+  - SSL validation can fail if your system time is wrong
+</Accordion>
+
+<Warning>
+  If you encounter SSL errors on legitimate sites, contact the site administrator. Do not attempt to bypass certificate validation.
+</Warning>
+
+### Network request failed - possible CORS or security restriction
+
+**Cause:** Generic fetch failure, often related to CORS policies or security restrictions.
+
+```typescript
+if (fetchError.message.includes("Failed to fetch")) {
+  errorMessage = "Network request failed - possible CORS or security restriction";
+}
+```
+
+**Solutions:**
+
+<Accordion title="CORS restrictions">
+  Some servers block requests from non-browser clients. This is a server-side restriction that cannot be bypassed from Redirect Trace.
+</Accordion>
+
+<Accordion title="Network issues">
+  - Check your internet connection
+  - Try disabling VPN if enabled
+  - Try from a different network
+</Accordion>
+
+<Accordion title="Security software">
+  Antivirus or security software may be blocking the request. Temporarily disable to test.
+</Accordion>
+
+### CORS policy blocked the request
+
+**Cause:** Server explicitly blocked the request due to CORS policy.
+
+```typescript
+if (fetchError.message.includes("CORS")) {
+  errorMessage = "CORS policy blocked the request";
+}
+```
+
+**Solutions:**
+
+<Accordion title="Server-side restriction">
+  The server is configured to only accept requests from specific origins. This cannot be fixed from the client side.
+</Accordion>
+
+<Accordion title="Alternative approach">
+  - Try accessing the URL in a web browser instead
+  - Contact the site owner if you need API access
+  - Use browser developer tools to trace redirects manually
+</Accordion>
+
+## Common issues
+
+### Incomplete redirect chain
+
+**Symptom:** The trace shows "Incomplete" status and stops before reaching the final destination.
+
+**Causes:**
+
+1. **Hit maxRedirects limit** - The chain exceeded your configured maximum
+2. **Missing location header** - A 3xx response didn't include a `location` header
+3. **Malformed location header** - The redirect URL couldn't be parsed
+
+**Solutions:**
+
+<Accordion title="Increase maxRedirects">
+  1. Open Raycast Settings > Extensions > Redirect Trace
+  2. Increase "Max Redirects" (try `15` or `20`)
+  3. Retry the trace
+</Accordion>
+
+<Accordion title="Check for broken redirects">
+  If the chain stops at a redirect status (301, 302) but no location header exists, the server has a misconfiguration. Report to the site owner.
+</Accordion>
+
+### Long URLs not pasting
+
+**Symptom:** URLs over 500 characters won't paste into the search bar.
+
+**Solution:**
+
+<Accordion title="Use clipboard feature">
+  1. Copy the long URL to your clipboard
+  2. Open Redirect Trace
+  3. Use the "Check Clipboard" action (Cmd+V)
+  4. Select "Trace This URL"
+</Accordion>
+
+This is intentional behavior - the search bar has input limits, but the clipboard feature handles URLs of any length.
+
+### Redirects work in browser but fail in Redirect Trace
+
+**Causes:**
+
+1. **User-Agent blocking** - Server only accepts browser user agents
+2. **JavaScript redirects** - Page uses client-side redirects
+3. **Cookie requirements** - Server requires cookies to be set
+
+**Solutions:**
+
+<Accordion title="User-Agent blocking">
+  Redirect Trace sends: `RedirectTrace-Raycast-Extension/1.0`
+  
+  Some servers block non-browser user agents. This is a server-side restriction.
+</Accordion>
+
+<Accordion title="JavaScript redirects">
+  Redirect Trace only follows HTTP redirects (3xx status codes). It cannot execute JavaScript that performs client-side redirects.
+  
+  Use browser developer tools for JavaScript-based redirects.
+</Accordion>
+
+<Accordion title="Cookie-based redirects">
+  Some sites require cookies to be set before redirecting. Redirect Trace doesn't maintain cookie state between requests.
+</Accordion>
+
+### Tracking parameters not removed
+
+**Symptom:** The "Clean URL" still contains tracking parameters.
+
+**Explanation:**
+
+The `cleanTrackingParams()` function removes 50+ known tracking parameters and uses heuristics for unknown ones. However, custom or proprietary tracking parameters may not be detected.
+
+**Parameters removed:**
+- Google Analytics: `utm_*`, `gclid`, `_ga`
+- Facebook: `fbclid`, `fb_*`
+- Email marketing: `mc_cid`, `_hsenc`, `mkt_tok`
+- Many more - see [API reference](/reference/api#cleantrackingparams)
+
+**If parameters remain:**
+
+<Accordion title="Custom tracking parameters">
+  If you encounter parameters that should be removed but aren't, these may be custom to that site. You can manually remove them or report them for inclusion in future versions.
+</Accordion>
+
+<Accordion title="Functional parameters">
+  Some parameters that look like tracking may actually be functional (session IDs, authentication tokens). The cleaner deliberately preserves short parameters and those that may affect functionality.
+</Accordion>
+
+## Debugging tips
+
+### View full error details
+
+1. When an error occurs, check the "Error" section in the results
+2. Use "Copy Error" action (Cmd+C) to get the full error message
+3. Check the last successful step in the redirect chain to see where it failed
+
+### Inspect headers
+
+For each redirect step:
+
+1. Select the step in the redirect chain
+2. Use "Copy Headers" action (Cmd+Shift+C)
+3. Examine the `location` header to see the redirect target
+4. Check `cache-control`, `set-cookie`, and other headers for clues
+
+### Compare with browser
+
+Use browser developer tools to compare:
+
+1. Open browser DevTools (F12)
+2. Go to Network tab
+3. Enter the URL
+4. Compare redirect chain with Redirect Trace results
+5. Look for differences in headers or behavior
+
+### Test with simpler URLs
+
+<Accordion title="Isolate the issue">
+  If a complex URL fails:
+  
+  1. Try the base domain without parameters
+  2. Add parameters one at a time
+  3. Identify which parameter or path causes the failure
+  4. This helps determine if it's a URL encoding issue or server behavior
+</Accordion>
+
+## Still having issues?
+
+If you encounter persistent problems:
+
+1. **Verify prerequisites:**
+   - Active internet connection
+   - Latest version of Redirect Trace
+   - Latest version of Raycast
+
+2. **Collect information:**
+   - Full error message (use "Copy Error" action)
+   - URL being traced (if shareable)
+   - Your timeout and maxRedirects settings
+   - Steps that lead to the error
+
+3. **Test workarounds:**
+   - Try from a different network
+   - Increase timeout and maxRedirects
+   - Test with browser developer tools
+   - Verify the URL is accessible in a standard browser
+
+<Warning>
+  If the URL contains sensitive information or authentication tokens, do not share it publicly. Instead, test with a similar public URL to demonstrate the issue.
+</Warning>

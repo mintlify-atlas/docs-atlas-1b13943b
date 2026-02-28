@@ -1,0 +1,174 @@
+---
+title: Keyboard shortcuts
+description: Complete reference of all keyboard shortcuts available in Redirect Trace
+---
+
+Redirect Trace includes comprehensive keyboard shortcuts for efficient navigation and quick actions. All shortcuts work across different sections of the extension.
+
+## Quick reference table
+
+<Note>
+  All shortcuts use the Command key (⌘) on macOS. Combine with Shift (⇧) or Option (⌥) for additional actions.
+</Note>
+
+### Global shortcuts
+
+These shortcuts work throughout the extension:
+
+| Shortcut | Action | Context |
+|----------|--------|---------|
+| **⌘V** | Check clipboard for URLs | Main view, checks clipboard manually |
+| **⌘X** | Clear clipboard detection | Clipboard URL section |
+
+### URL actions
+
+These shortcuts work when viewing trace results:
+
+| Shortcut | Action | Available in |
+|----------|--------|--------------|
+| **⌘C** | Copy final/clean URL | Summary, final destination, clean URL items |
+| **⌘O** | Open URL in browser | All URL items |
+| **⌘⇧C** | Copy original URL | Summary and final destination items |
+| **⌘⇧L** | Copy clean URL (no tracking) | Final destination and redirect chain items |
+| **⌘⌥C** | Copy full chain report | Summary items |
+| **⌘⇧⌥C** | Copy all URLs or step details | Redirect chain items |
+
+### Display actions
+
+These shortcuts show URL information in toast notifications:
+
+| Shortcut | Action | Available in |
+|----------|--------|--------------|
+| **⌘I** | Show full URL in toast | Redirect chain items |
+| **⌘L** | Show clean URL in toast | Final destination and redirect chain items |
+
+## Keyboard shortcuts by section
+
+### Summary section shortcuts
+
+When viewing the redirect summary:
+
+<CodeGroup>
+```text Copy actions
+⌘C      → Copy final URL
+⌘⇧C     → Copy original URL
+⌘⌥C     → Copy full chain report
+⌘⇧⌥C    → Copy all URLs
+```
+
+```text Browser actions
+⌘O      → Open final URL in browser
+```
+</CodeGroup>
+
+### Final destination shortcuts
+
+When focused on the final destination item:
+
+<CodeGroup>
+```text Copy actions
+⌘C      → Copy final URL
+⌘⇧C     → Copy original URL
+⌘⇧L     → Copy clean URL (no tracking)
+⌘⌥C     → Copy full chain report
+```
+
+```text Display actions
+⌘L      → Show clean URL in toast
+```
+</CodeGroup>
+
+### Clean URL shortcuts
+
+When focused on the clean URL item (when tracking parameters are detected):
+
+<CodeGroup>
+```text Copy actions
+⌘C      → Copy clean URL
+⌘⇧C     → Copy original final URL
+```
+
+```text Browser actions
+⌘O      → Open clean URL in browser
+```
+</CodeGroup>
+
+### Redirect chain shortcuts
+
+When focused on any step in the redirect chain:
+
+<CodeGroup>
+```text Copy actions
+⌘C      → Copy URL for this step
+⌘⇧C     → Copy headers for this step
+⌘⇧L     → Copy clean URL (no tracking)
+⌘⌥C     → Copy all URLs up to this step
+⌘⇧⌥C    → Copy step details (URL, clean URL, headers)
+```
+
+```text Display actions
+⌘I      → Show full URL in toast
+⌘L      → Show clean URL in toast
+```
+
+```text Browser actions
+⌘O      → Open URL in browser
+```
+</CodeGroup>
+
+### Clipboard detection shortcuts
+
+When a long URL is detected in clipboard:
+
+<CodeGroup>
+```text Clipboard actions
+⌘C      → Copy full clipboard URL
+⌘X      → Clear clipboard detection
+```
+</CodeGroup>
+
+## Tips for efficient use
+
+<Tip>
+  Combine keyboard shortcuts with Raycast's native navigation (↑↓ arrow keys) to quickly move through the redirect chain and copy specific URLs.
+</Tip>
+
+### Common workflows
+
+**Quick trace and copy:**
+1. Open Redirect Trace
+2. Paste URL (⌘V or type it)
+3. Wait for trace to complete
+4. Press ⌘C to copy final URL
+
+**Trace from clipboard:**
+1. Copy long URL anywhere
+2. Open Redirect Trace
+3. Press ⌘V if not auto-detected
+4. Press Enter on "Trace This URL"
+5. Press ⌘C to copy result
+
+**Get clean URL without tracking:**
+1. Trace any URL
+2. Navigate to "Final Destination" item
+3. Press ⌘⇧L to copy clean URL
+4. Or press ⌘L to preview it first
+
+**Export full report:**
+1. Trace URL and wait for completion
+2. Navigate to summary item
+3. Press ⌘⌥C to copy full chain report
+4. Paste into your notes or documentation
+
+## Keyboard shortcut modifiers
+
+Understanding the modifier pattern helps remember shortcuts:
+
+- **⌘ alone** - Primary action (copy, open)
+- **⌘⇧** - Secondary or alternative action (copy original, clean URL)
+- **⌘⌥** - Extended action (copy full report, bulk operations)
+- **⌘⇧⌥** - Specialized action (copy all URLs, detailed step info)
+
+<Note>
+  Not all combinations are available in every context. The action panel shows available shortcuts for the currently selected item.
+</Note>

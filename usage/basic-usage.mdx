@@ -1,0 +1,96 @@
+---
+title: Basic usage
+description: Learn the three methods to use Redirect Trace and start tracing URL redirects
+---
+
+Redirect Trace provides three convenient methods to trace URL redirects. Choose the method that best fits your workflow.
+
+## Three methods to trace URLs
+
+<Steps>
+  <Step title="Method 1: Search bar">
+    The quickest way to trace a URL is by typing or pasting it directly into the search bar.
+
+    1. Open Redirect Trace in Raycast
+    2. Type or paste any URL in the search bar
+    3. Press Enter to trace the redirect chain
+    4. View the complete path from original to final destination
+
+    <Note>
+      This method works best for URLs under 500 characters. For longer URLs, use the clipboard detection method.
+    </Note>
+  </Step>
+
+  <Step title="Method 2: Clipboard detection">
+    Redirect Trace automatically detects long URLs in your clipboard when you open the extension.
+
+    1. Copy any long URL to your clipboard (500+ characters)
+    2. Open Redirect Trace
+    3. If a long URL is detected, you'll see a clipboard section
+    4. Click "Trace This URL" to analyze the redirect chain
+
+    <Tip>
+      The extension displays the character count and a preview of clipboard URLs, making it easy to confirm you're tracing the right link.
+    </Tip>
+  </Step>
+
+  <Step title="Method 3: Keyboard shortcuts">
+    Use keyboard shortcuts for faster workflow without leaving your keyboard.
+
+    - **⌘V** - Check clipboard for URLs manually
+    - **⌘C** - Copy final URL after tracing
+    - **⌘O** - Open final URL in browser
+    - **⌘⇧C** - Copy original URL
+    - **⌘⌥C** - Copy full chain report
+
+    <Note>
+      For a complete list of all keyboard shortcuts, see the [keyboard shortcuts reference](/usage/keyboard-shortcuts).
+    </Note>
+  </Step>
+</Steps>
+
+## What you'll see after tracing
+
+After tracing a URL, Redirect Trace displays comprehensive information organized into sections:
+
+### Summary section
+
+- **Original URL** - The URL you entered with character count
+- **Final destination** - Where the URL actually leads
+- **Clean URL** - Final URL with tracking parameters removed
+- **Redirect count** - Number of redirects in the chain
+
+### Redirect chain section
+
+Each step in the chain shows:
+
+- **HTTP status code** - 301, 302, 307, etc.
+- **Status message** - Moved Permanently, Found, etc.
+- **URL at each step** - Complete redirect path
+- **Headers** - Response headers for each redirect
+- **Step number** - Position in the redirect chain
+
+<Tip>
+  You can copy individual URLs, headers, or the entire chain report using keyboard shortcuts or the action panel.
+</Tip>
+
+## Supported URL types
+
+Redirect Trace works with any HTTP/HTTPS URL, including:
+
+- **Shortened URLs** - bit.ly, tinyurl.com, t.co, etc.
+- **Marketing links** - Email campaign URLs with tracking
+- **Tracking URLs** - URLs with UTM parameters
+- **Social media** - Facebook, Twitter redirect URLs
+- **Any web link** - Direct analysis of any HTTP/HTTPS URL
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Keyboard shortcuts" icon="keyboard" href="/usage/keyboard-shortcuts">
+    Master all available keyboard shortcuts for efficient URL tracing
+  </Card>
+  <Card title="Long URLs" icon="link" href="/usage/long-urls">
+    Learn how to handle URLs with 500+ characters using clipboard detection
+  </Card>
+</CardGroup>

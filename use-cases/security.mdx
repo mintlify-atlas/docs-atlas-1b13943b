@@ -1,0 +1,140 @@
+---
+title: Security use cases
+description: Protect yourself from phishing attacks, malware, and malicious links by tracing URLs before you click them
+---
+
+Redirect Trace helps you stay safe online by revealing where links really lead before you click them. Use it to detect phishing attempts, verify suspicious URLs, and protect yourself from malware.
+
+## Phishing detection
+
+Identify phishing attempts by tracing suspicious links to their final destination. Scammers often use URL shorteners and redirects to hide malicious websites.
+
+<CardGroup cols={2}>
+  <Card title="Email link verification" icon="envelope">
+    Trace links from unexpected emails claiming to be from your bank, shipping companies, or IT department before clicking them
+  </Card>
+  <Card title="Social media scams" icon="share-nodes">
+    Check shortened URLs in social media messages that promise prizes, urgent security alerts, or too-good-to-be-true offers
+  </Card>
+</CardGroup>
+
+### Real-world example
+
+You receive an email claiming to be from your bank with a shortened bit.ly link:
+
+```
+https://bit.ly/3xY9zK1
+```
+
+Trace this URL in Redirect Trace to reveal it actually leads to:
+
+```
+https://fake-bank-login-phishing-site.com/secure-login
+```
+
+The legitimate bank domain is nowhere in the redirect chain - this is a phishing attempt.
+
+<Info>
+Legitimate companies rarely use URL shorteners in official communications. If you see a shortened link in an email claiming to be from your bank or a major service, trace it first.
+</Info>
+
+## Malware prevention
+
+Check URLs before clicking them to avoid malware downloads and drive-by infections. Many malware campaigns use multiple redirects to evade detection.
+
+<Accordion title="How redirect chains hide malware">
+Attackers use multiple redirects to:
+- Bypass email and security filters that only check the first URL
+- Make it harder to track and block malicious domains
+- Add fingerprinting and targeting between redirect steps
+- Change the final destination based on your location or device
+
+Redirect Trace shows you every step in the chain, revealing hidden malware sites.
+</Accordion>
+
+### Common malware patterns
+
+Watch for these red flags when tracing URLs:
+
+- **Multiple suspicious redirects** - More than 3-4 redirects, especially through unfamiliar domains
+- **Mixed short domains** - Chains that jump between multiple URL shorteners (bit.ly → tinyurl → custom shortener)
+- **Geographic redirects** - URLs that redirect based on your location to target specific regions
+- **File downloads** - Final URLs that point directly to .exe, .zip, or .dmg files
+
+<Info>
+If you see a redirect chain with more than 5 steps or redirects through unfamiliar domains, don't click the link. Legitimate websites rarely use complex redirect chains.
+</Info>
+
+## Link verification
+
+Verify that links are legitimate before sharing them with colleagues or clicking them yourself. This is especially important for:
+
+<CardGroup cols={2}>
+  <Card title="Shortened URLs" icon="link">
+    Verify where bit.ly, tinyurl, t.co, and other shortened URLs really lead before sharing them internally
+  </Card>
+  <Card title="Email attachments" icon="paperclip">
+    Check links in email attachments and documents from unknown senders before accessing them
+  </Card>
+  <Card title="QR codes" icon="qrcode">
+    Trace URLs from QR codes you scan in public places or receive in mail to verify they're safe
+  </Card>
+  <Card title="Slack and Teams" icon="comments">
+    Verify links shared in workplace chat tools, especially from new contacts or external guests
+  </Card>
+</CardGroup>
+
+### Verification workflow
+
+Follow this workflow when you receive a suspicious link:
+
+1. **Copy the URL** without clicking it - right-click and select "Copy Link Address"
+2. **Open Redirect Trace** in Raycast
+3. **Paste the URL** into the search bar or use clipboard detection for long URLs
+4. **Review the redirect chain** - Check each step for suspicious domains
+5. **Verify the final destination** - Confirm it matches what you expect
+
+<Accordion title="What to look for in the redirect chain">
+**Green flags (safe patterns):**
+- Final URL matches the expected domain (e.g., company.com)
+- 0-2 redirects, typically just HTTP to HTTPS
+- Clean final URL without suspicious parameters
+- Well-known tracking domains (google.com/url, facebook.com/l.php)
+
+**Red flags (suspicious patterns):**
+- Final domain completely different from what you expect
+- Multiple unfamiliar domains in the redirect chain
+- Very long final URLs with encoded or obfuscated parameters
+- Domains registered recently (check with WHOIS if unsure)
+- Top-level domains associated with spam (.tk, .ml, .ga)
+</Accordion>
+
+## Security best practices
+
+<CardGroup cols={1}>
+  <Card title="Never click first" icon="hand">
+    Always trace suspicious URLs before clicking, especially in emails, texts, and social media messages
+  </Card>
+  <Card title="Check the final domain" icon="globe">
+    Verify the final destination domain matches what you expect - if it doesn't, don't click
+  </Card>
+  <Card title="Watch for https" icon="lock">
+    Legitimate sites use HTTPS (the lock icon). If the final URL is HTTP only, be cautious
+  </Card>
+  <Card title="Trust your instincts" icon="shield">
+    If something feels off about a URL or redirect chain, don't click it - even if you can't identify the specific threat
+  </Card>
+</CardGroup>
+
+## Integration with security workflow
+
+Use Redirect Trace as part of your security toolkit:
+
+- **Before reporting phishing** - Trace the URL and copy the full chain report to include in your report to IT security
+- **Security awareness training** - Show colleagues how redirect chains work and how to verify links
+- **Incident response** - When investigating a security incident, trace URLs to understand the attack vector
+- **Threat intelligence** - Document malicious redirect patterns and share them with your security team
+
+<Info>
+Use the "Copy Full Chain Report" action (⌘⌥C) to capture all redirect details when reporting suspicious URLs to your security team.
+</Info>

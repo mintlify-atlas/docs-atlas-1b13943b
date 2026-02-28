@@ -1,0 +1,194 @@
+---
+title: Long URLs
+description: How to handle URLs with 500+ characters using clipboard detection in Redirect Trace
+---
+
+Redirect Trace includes special handling for long URLs (500+ characters) to ensure reliable tracing without input field limitations.
+
+## Why clipboard detection for long URLs?
+
+URLs with 500 or more characters can cause issues when pasted directly into search fields:
+
+- **Input field limitations** - Some UI frameworks truncate long inputs
+- **Performance issues** - Real-time tracing on input change can be slower with very long URLs
+- **Display problems** - Extremely long URLs are difficult to verify in a search bar
+- **Clipboard reliability** - Reading from clipboard is more reliable than form inputs for large strings
+
+<Note>
+  The 500-character threshold was chosen to balance convenience (most URLs work in the search bar) with reliability (very long URLs use clipboard detection).
+</Note>
+
+## How clipboard detection works
+
+<Steps>
+  <Step title="Automatic detection">
+    When you open Redirect Trace, the extension automatically checks your clipboard for long URLs.
+
+    - Extension reads clipboard content on launch
+    - Checks if content is a URL (starts with `http://` or `https://`)
+    - Checks if URL length exceeds 500 characters
+    - Displays detection notification if conditions are met
+
+    <Tip>
+      The notification shows the URL length in kilobytes (e.g., "0.8k characters") to help you gauge the URL size.
+    </Tip>
+  </Step>
+
+  <Step title="Clipboard URL section">
+    When a long URL is detected, a dedicated section appears at the top of the list.
+
+    The clipboard section displays:
+    - **Character count** - Total number of characters
+    - **URL preview** - First 100 characters of the URL
+    - **Size indicator** - Character count in kilobytes
+    - **Trace action** - Button to start tracing
+
+    Example display:
+    ```
+    📋 Paste Long URL From Clipboard
+    800 characters - https://example.com/very-long-url...
+    0.8k chars
+    ```
+  </Step>
+
+  <Step title="Manual clipboard check">
+    If automatic detection doesn't trigger, you can manually check your clipboard.
+
+    1. Copy your long URL
+    2. Open Redirect Trace
+    3. Navigate to "For Very Long URLs" item in the "How to Use" section
+    4. Press **⌘V** or select "Check Clipboard for Long URLs"
+
+    <Note>
+      Manual checking is useful if you copied the URL after opening the extension, or if automatic detection failed.
+    </Note>
+  </Step>
+
+  <Step title="Trace the URL">
+    Once detected, trace the long URL with a single action.
+
+    1. Press Enter on "Trace This URL" item
+    2. Or press **⌘V** to check clipboard and trace automatically
+    3. Wait for tracing to complete (may take a few seconds for very long URLs)
+    4. View results in the summary and redirect chain sections
+
+    <Tip>
+      Long URLs may take slightly longer to process. You'll see an animated toast notification showing progress.
+    </Tip>
+  </Step>
+</Steps>
+
+## Working with very long URLs
+
+### Character count thresholds
+
+Redirect Trace displays character counts differently based on URL length:
+
+| Length | Display Format | Example |
+|--------|----------------|---------|
+| < 100 chars | Exact count | `87 chars` |
+| 100-999 chars | Exact count | `650 chars` |
+| 1000+ chars | Kilobytes | `1.2k chars` |
+
+### Performance considerations
+
+When tracing very long URLs:
+
+- **Processing time** - URLs over 500 characters show a "Processing Long URL" toast
+- **Network timeouts** - Longer URLs may trigger timeout settings faster
+- **Memory usage** - Very long redirect chains with long URLs consume more memory
+
+<Note>
+  You can adjust timeout settings in Raycast preferences if long URLs consistently time out.
+</Note>
+
+## Common scenarios for long URLs
+
+### Marketing campaign URLs
+
+Email marketing tools often generate extremely long URLs with extensive tracking parameters:
+
+```
+https://example.com/landing?utm_source=newsletter&utm_medium=email&utm_campaign=summer_2024&utm_content=cta_button_1&subscriber_id=abc123def456&email_id=campaign_789&tracking_token=veryLongRandomString123456789...
+```
+
+**Solution:** Use clipboard detection to trace these URLs and copy the clean URL without tracking parameters.
+
+### Encoded redirect URLs
+
+Some services encode entire URLs as parameters, creating very long redirect chains:
+
+```
+https://redirect.example.com?url=https%3A%2F%2Fanother-site.com%2Fpath%3Fparam1%3Dvalue1%26param2%3Dvalue2%26param3%3Dvalue3...
+```
+
+**Solution:** Clipboard detection handles these URLs reliably, showing you the decoded chain at each step.
+
+### Social media share URLs
+
+Social media platforms add tracking and metadata to shared links:
+
+```
+https://facebook.com/l.php?u=https%3A%2F%2Foriginal-site.com%2Farticle&h=AT0a1b2c3d4e5f...&s=1&enc=...&additional_params...
+```
+
+**Solution:** Copy the social media URL and use clipboard detection to trace to the original destination.
+
+## Keyboard shortcuts for clipboard URLs
+
+When working with clipboard-detected URLs:
+
+| Shortcut | Action |
+|----------|--------|
+| **⌘V** | Check clipboard manually |
+| **⌘C** | Copy full clipboard URL |
+| **⌘X** | Clear clipboard detection |
+| **Enter** | Trace the detected URL |
+
+<Tip>
+  After tracing a long URL, use **⌘⇧L** to copy the clean version without tracking parameters, which is often much shorter.
+</Tip>
+
+## Troubleshooting clipboard detection
+
+### Clipboard not detected automatically
+
+**Possible causes:**
+- URL is under 500 characters (use search bar instead)
+- Clipboard doesn't contain a valid HTTP/HTTPS URL
+- Extension opened before URL was copied
+
+**Solution:** Use manual clipboard check with **⌘V** after copying the URL.
+
+### Clipboard cleared unexpectedly
+
+**Possible causes:**
+- Another app modified clipboard
+- System clipboard history interfered
+
+**Solution:** Copy the URL again and use manual clipboard check.
+
+### URL too long error
+
+**Possible causes:**
+- URL exceeds system clipboard limits (very rare)
+- URL contains invalid characters causing parsing issues
+
+**Solution:** Try shortening the URL by removing obvious tracking parameters manually first, then trace the cleaner version.
+
+## Best practices
+
+<CardGroup cols={2}>
+  <Card title="Copy before opening" icon="clipboard">
+    Copy your long URL to clipboard before opening Redirect Trace for automatic detection
+  </Card>
+  <Card title="Verify preview" icon="eye">
+    Check the URL preview in the clipboard section to ensure you're tracing the right URL
+  </Card>
+  <Card title="Save clean URLs" icon="sparkles">
+    After tracing, copy the clean URL to replace the long original in your notes or bookmarks
+  </Card>
+  <Card title="Manual check available" icon="keyboard">
+    Remember ⌘V for manual clipboard check if automatic detection doesn't trigger
+  </Card>
+</CardGroup>
